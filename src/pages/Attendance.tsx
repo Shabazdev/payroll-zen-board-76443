@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Calendar } from '@/components/ui/calendar';
+import { useToast } from '@/hooks/use-toast';
 import { 
   Select,
   SelectContent,
@@ -88,8 +89,39 @@ const recentAttendance = [
 ];
 
 export default function Attendance() {
+  const { toast } = useToast();
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [selectedMonth, setSelectedMonth] = useState('april-2024');
+  const [leaveRequestsList, setLeaveRequestsList] = useState(leaveRequests);
+
+  const handleApproveLeave = (requestId: number, employeeName: string) => {
+    setLeaveRequestsList(prevRequests =>
+      prevRequests.map(request =>
+        request.id === requestId
+          ? { ...request, status: 'Approved' }
+          : request
+      )
+    );
+    toast({
+      title: "Leave Approved",
+      description: `${employeeName}'s leave request has been approved.`,
+    });
+  };
+
+  const handleRejectLeave = (requestId: number, employeeName: string) => {
+    setLeaveRequestsList(prevRequests =>
+      prevRequests.map(request =>
+        request.id === requestId
+          ? { ...request, status: 'Rejected' }
+          : request
+      )
+    );
+    toast({
+      title: "Leave Rejected",
+      description: `${employeeName}'s leave request has been rejected.`,
+      variant: "destructive",
+    });
+  };
 
   return (
     <div className="space-y-6">
@@ -236,7 +268,7 @@ export default function Attendance() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {leaveRequests.map((request) => (
+              {leaveRequestsList.map((request) => (
                 <TableRow key={request.id}>
                   <TableCell className="font-medium">{request.employeeName}</TableCell>
                   <TableCell>{request.type}</TableCell>
@@ -257,10 +289,20 @@ export default function Attendance() {
                   <TableCell>
                     {request.status === 'Pending' && (
                       <div className="flex gap-2">
-                        <Button size="sm" variant="outline" className="text-success hover:text-success">
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          className="text-success hover:text-success"
+                          onClick={() => handleApproveLeave(request.id, request.employeeName)}
+                        >
                           Approve
                         </Button>
-                        <Button size="sm" variant="outline" className="text-destructive hover:text-destructive">
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          className="text-destructive hover:text-destructive"
+                          onClick={() => handleRejectLeave(request.id, request.employeeName)}
+                        >
                           Reject
                         </Button>
                       </div>
